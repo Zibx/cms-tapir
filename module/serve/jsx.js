@@ -95,24 +95,30 @@ module.exports = {
 							console.error(err);
 							resolve( cacheCode[ code ] );
 						}else{
+              var mapImports = {};
 							var imports = await Promise.all( importExtractor.state.map( async item => {
 
 
 								var {file, data} = await util.path.resolve( item.from, baseFile, config.template );
-								var ext = item.from.split('.').pop();
+    						var ext = item.from.split('.').pop();
 								if(!file){
+                  mapImports[item.from] = item;
 									if(ext.length>5){
 										var {file, data} = await util.path.resolve( item.from+'.jsx', baseFile, config.template );
-										if(file)
-											item.from+='.jsx';
+										if(file) {
+                      item.from += '.jsx';
+                      item.nodeFrom.value += '.jsx';
+                    }
 
 										if(!file){
 											var {file, data} = await util.path.resolve( item.from+'.js', baseFile, config.template );
-											if(file)
-												item.from+='.js';
+											if(file) {
+                        item.from += '.js';
+                        item.nodeFrom.value += '.js';
+                      }
 										}
 									}
-								}
+								};
 
 								dependency.register(file)
 								return { base: baseFile, file: item.from, resolved: file, pos: item.fromLocation };
@@ -133,11 +139,22 @@ module.exports = {
 									}
 								}
 							} ) );
+
 							var failed = imports.filter( a => !a.resolved );
 							if( failed.length ){
 								console.log(`ERROR: JSX '${baseFile.subPath}' Can not resolve: ${failed.map(f=>f.file).join(',')}`);
 								return reject( failed )
 							}
+
+              d.code = d.code.replace(/(define\("[^"]*",\s*)(\[[^\]]*\])/, function(a,b,c){
+                return b+JSON.stringify(JSON.parse(c).map(function(name){
+                    if(!(name in mapImports))
+                      return name;
+
+                    return mapImports[name].from;
+                }))
+              });
+
 							cacheCode[ code ] = { error: false, data: d, file: baseFile };
 							resolve( cacheCode[ code ] );
 						}

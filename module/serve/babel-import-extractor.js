@@ -17,12 +17,14 @@ class BabelPluginExtractImportNames {
               Identifier(path) {
                 if (path.key === 'local') {
                   item.name = path.node.name;
+
                 }
               },
               Literal(path) {
                 if (path.key === 'source') {
                   item.from = path.node.value;
                   item.fromLocation = path.node.loc;
+                  item.nodeFrom = path.node;
                 }
               }
             })

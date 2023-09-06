@@ -90,6 +90,17 @@ describe('basic tapir', function(){
 		assert.equal(1,1);
 	} );
 
+  it( 'should serve jsx without extension', function(done){
+    var t = createTapir(done);
+
+    t.serve('/block/block3.jsx', function(err, result) {
+      assert.equal(err, false);
+      assert.equal(result.code.indexOf('D.h("div", null, "a"')>-1, true);
+      assert.equal(result.code.indexOf('"./block4.jsx"')>-1, true);
+    });
+    assert.equal(1,1);
+  } );
+
 	it( 'should serve scss', function(done){
 		var t = createTapir(done);
 
