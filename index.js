@@ -134,6 +134,40 @@ CMS.prototype = {
   _initRoutes: function(routes) {
     this.routes = Object.assign( {}, this.routes );
     this.routes = Object.assign( this.defaultRoutes(), routes );
+    
+    // deal with multiple path routes
+    for(var route in this.routes){
+      if(route.indexOf(',')>-1){
+        var subRoutes = route.split(',');
+        subRoutes.forEach((subRoute)=>{
+          var trimmed = subRoute.trim();
+          this.routes[trimmed] = Object.assign({
+            baseRoute: route,
+            subRoute: trimmed
+          }, this.routes[route]);          
+        });
+        delete this.routes[route];        
+      }
+    }
+    
+    // separate templated routes
+    this.templateRoutes = [];
+    for(var route in this.routes){
+      if(route.indexOf('*')>-1){
+        this.templateRoutes.push({
+          route, info: this.routes[route], 
+          regexp: new RegExp(
+            '^'+
+            route
+              .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+              .replace(/\*/g, '.*')
+            +'$'
+          )
+        });
+        
+        delete this.routes[route];
+      }
+    }
   },
   extendAPI: function(routes) {
     this.api(routes);
@@ -205,10 +239,14 @@ CMS.prototype = {
       console.log('STATIC: ', dir.path)
       app.use(App.static(dir.path));
     });
-    
+
     api(this.currentAPI = this.__cfg.api || {});
 
     app.use(R);
+    
+    this.getModule('Pattern') && app.use(this.getModule('Pattern').middleware);
+    
+    
     this.fire('afterInit');
     setTimeout(()=>this.updateCheck(), 10000);
     setInterval(()=>this.updateCheck(), 60000*60*24);

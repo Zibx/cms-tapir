@@ -6,17 +6,17 @@ const serves = require('./serve/all.js');
 const staticCache = {};
 const fetch = require("node-fetch");
 
-var Serve = function(main) {
+var Pattern = function(main) {
 	this.main = main;
 	this.middleware = this.middleware.bind(this);
-	main.registerModule('Serve', this);
+	main.registerModule('Pattern', this);
 
 	// HACK. TODO refactor
 	for(var s in serves){
 		serves[s].main = main;
 	}
 };
-Serve.prototype = {
+Pattern.prototype = {
 	expose: ['serve', 'complexServe', 'setStatic', 'isStatic', 'updateCheck'],
 	updateCheck: async function(tapir) {
 		let response;
@@ -63,16 +63,33 @@ Serve.prototype = {
     var route;
     var matched = false;
 
-		if(fileName in this.main.routes){
-			serveType = 'page';
-      route = this.main.routes[fileName];
-      matched = true;
-		}else if(fileName.charAt(0) === '/' && fileName.substr(1) in this.main.routes){
-			fileName = fileName.substr(1);
-      route = this.main.routes[fileName];
-			serveType = 'page';
-      matched = true;
-		}
+
+    // templates
+    var templateRoutes = this.main.templateRoutes;
+    if(templateRoutes) {
+
+      for( var i = 0, _i = templateRoutes.length; i < _i; i++ ) {
+        var regexp = templateRoutes[i].regexp;
+        if(fileName.match(regexp)){
+          serveType = 'page';
+          route = templateRoutes[i].info;
+          matched = true;
+          break;
+        }else if(fileName.charAt(0) === '/' && fileName.substr(1).match(regexp)){
+          fileName = fileName.substr(1);
+          route = templateRoutes[i].info;
+          serveType = 'page';
+          matched = true;
+          break;
+        }
+      }
+      if(!matched){
+
+      }
+    }else{
+      // can not match
+    }
+    
 
 		var pageFileName = fileName;
 
@@ -175,6 +192,6 @@ Serve.prototype = {
 	'~destroy': function(cb) {
 		cb && cb();
 	},
-	constructor: Serve
+	constructor: Pattern
 };
-module.exports = Serve
+module.exports = Pattern

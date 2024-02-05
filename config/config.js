@@ -3,6 +3,7 @@ module.exports = {
     server: true,
     serve: true,
     admin: true,
+    pattern: true
     //live: true
   },
   static: ['public', 'src'],

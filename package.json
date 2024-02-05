@@ -1,6 +1,6 @@
 {
   "name": "cms-tapir",
-  "version": "0.3.42",
+  "version": "0.4.01",
   "dependencies": {
     "@babel/core": "^7.8.3",
     "@babel/helper-plugin-utils": "^7.10.4",
