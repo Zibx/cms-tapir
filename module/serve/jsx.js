@@ -96,6 +96,7 @@ module.exports = {
 							resolve( cacheCode[ code ] );
 						}else{
               var mapImports = {};
+              var mapFails = {};
 							var imports = await Promise.all( importExtractor.state.map( async item => {
 
 
@@ -142,12 +143,22 @@ module.exports = {
 
 							var failed = imports.filter( a => !a.resolved );
 							if( failed.length ){
-								console.log(`ERROR: JSX '${baseFile.subPath}' Can not resolve: ${failed.map(f=>f.file).join(',')}`);
-								return reject( failed )
+                failed.forEach(fail =>{
+                  var fullFailName = fail.base.dir.clone().file(path.join(fail.base.subDir, fail.file)).path;
+                  mapFails[fullFailName] = fail;
+                  mapFails[fail.file] = fail;
+                });
+
+								console.error(`ERROR: JSX '${baseFile.subPath}' Can not resolve: ${failed.map(f=>f.file).join(',')}`);
+								//return reject( failed )
+
 							}
 
               d.code = d.code.replace(/(define\("[^"]*",\s*)(\[[^\]]*\])/, function(a,b,c){
                 return b+JSON.stringify(JSON.parse(c).map(function(name){
+                    if(name in mapFails)
+                      return '__fail:'+name;
+
                     if(!(name in mapImports))
                       return name;
 

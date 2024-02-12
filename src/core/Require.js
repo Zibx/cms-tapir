@@ -122,6 +122,15 @@ ansispan.foregroundColors = {
     link.setAttribute( 'rel', 'stylesheet' );
     link.setAttribute( 'type', 'text/css' );
     link.setAttribute( 'href', fileName );
+    link.addEventListener('error', async function(e){
+      var response = await fetch( fileName, {
+        method: 'get'
+      });
+      var result = await response.text()
+      console.error('CSS loading error', fileName)
+      console.error(result);
+
+    },false);
     head.appendChild( link );
     if(!window.allLoaded.css[fileName]){
       window.allLoaded.css[ fileName ] = true;
@@ -276,15 +285,18 @@ ansispan.foregroundColors = {
         Object.assign(definitions[ fileName ], { deps: deps, fn: fn});
       }
 
-
-
-
-
       var notResolved = 0;
       for( var i = 0, _i = deps.length; i < _i; i++ ){
         const dep = deps[ i ];
         if( dep === 'exports' )
           continue;
+
+        if( dep.indexOf('__fail:') === 0 ) {
+          console.error(fileName + ' can not resolve '+ dep.split('__fail:')[1]);
+          definitions[dep] = definitions['__fail'];
+          continue;
+        }
+
         var skip = false;
         if( !( dep in definitions ) ){
           var matched = false;
@@ -357,6 +369,13 @@ ansispan.foregroundColors = {
   window.define.list = [];
   window.define.definitions = definitions;
   window.define.waiting = waiting;
+  definitions.__fail = new Module({
+    loading: false,
+    loaded: true,
+    executed: true,
+    fn: function(){
+        console.log('Unresolved')
+    }})
 
   var tmpArea = document.createElement("textarea");
   function decodeHtml(html) {

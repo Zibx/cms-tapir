@@ -162,7 +162,7 @@ Serve.prototype = {
 			res.end(result.data.code);
 
 		}else if(result && result.error){
-
+      res.statusCode = 500;
 			res.end(result.data);
 		}else{
 			next();
