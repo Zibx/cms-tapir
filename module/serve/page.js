@@ -114,6 +114,13 @@ module.exports = {
 				inputs = Object.assign(inputs, additional.route.input);
 			}
 			var finalHTML = htmlData;
+
+			for(var key in inputs) {
+        if( typeof inputs[ key ] === 'function' ) {
+          inputs[ key ] = await inputs[ key ].call( inputs, key );
+        }
+      }
+
 			for(var key in inputs){
 				finalHTML = finalHTML.replace(new RegExp('%'+key.toUpperCase()+'(?::([a-zA-Z_]+))?%', 'g'), function(full, operations){
 					var out = full;

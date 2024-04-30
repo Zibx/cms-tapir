@@ -160,7 +160,7 @@ CMS.prototype = {
             '^'+
             route
               .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
-              .replace(/\*/g, '.*')
+              .replace(/\*/g, '(.*)')
             +'$'
           )
         });

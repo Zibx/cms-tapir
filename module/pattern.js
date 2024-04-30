@@ -70,12 +70,13 @@ Pattern.prototype = {
 
       for( var i = 0, _i = templateRoutes.length; i < _i; i++ ) {
         var regexp = templateRoutes[i].regexp;
-        if(fileName.match(regexp)){
+        var matchResult;
+        if(matchResult = fileName.match(regexp)){
           serveType = 'page';
           route = templateRoutes[i].info;
           matched = true;
           break;
-        }else if(fileName.charAt(0) === '/' && fileName.substr(1).match(regexp)){
+        }else if(matchResult = fileName.charAt(0) === '/' && fileName.substr(1).match(regexp)){
           fileName = fileName.substr(1);
           route = templateRoutes[i].info;
           serveType = 'page';
@@ -92,7 +93,9 @@ Pattern.prototype = {
     
 
 		var pageFileName = fileName;
-
+    if(matched){
+      route.input.match = matchResult;
+    }
 		if(serveType === 'page'){
 			additional = {route: route, scope: this.main.scope, main: this.main};
 			pageFileName = path.join('page', additional.route.page +'.jsx');
